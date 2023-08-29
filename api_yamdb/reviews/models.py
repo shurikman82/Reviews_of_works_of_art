@@ -41,7 +41,7 @@ class Title(models.Model):
         blank=True,
         verbose_name='Описание произведения'
     )
-    year = models.IntegerField(max_length=4, verbose_name='Год выпуска')
+    year = models.IntegerField(verbose_name='Год выпуска')
     genre = models.ManyToManyField(
         Genre, through='TitleGenre',
         verbose_name='Жанр произведения',
