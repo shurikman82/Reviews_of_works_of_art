@@ -1,28 +1,24 @@
 from django.contrib.auth.tokens import default_token_generator
 from django.contrib.auth import get_user_model
 from django.core.mail import send_mail
-from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework.pagination import PageNumberPagination
+from django.shortcuts import get_object_or_404
+
 from rest_framework import status
 from rest_framework import generics, viewsets, permissions
-from django.shortcuts import get_object_or_404
-from rest_framework.decorators import action, api_view, permission_classes
-from rest_framework.response import Response
-from rest_framework_simplejwt.tokens import AccessToken
-from .serializers import (TokenSerializer, UserSerializer,
-                          UserMeSerializer, UserRegistrationSerializer)
-from django.shortcuts import render
-
-from django.shortcuts import get_object_or_404
 from rest_framework import filters, pagination, viewsets
-from reviews.models import Category, Genre, Title, Review
-from .serializers import CategorySerializer, GenreSerializer, TitleSerializer, ReviewSerializer
-from rest_framework.permissions import IsAuthenticated
-from .permissions import AdminAuthorModeratorOrReadOnly
-from rest_framework.views import APIView
+from rest_framework import AccessToken
+from rest_framework.decorators import action, api_view, permission_classes
+from rest_framework.filters import DjangoFilterBackend
 from rest_framework.response import Response
-from rest_framework.status import HTTP_401_UNAUTHORIZED
-from .permissions import IsAdmin
+from rest_framework.pagination import PageNumberPagination
+from rest_framework.response import Response
+
+from .serializers import (CategorySerializer, GenreSerializer,
+                          TitleSerializer, TokenSerializer,
+                          ReviewSerializer, UserSerializer,
+                          UserMeSerializer, UserRegistrationSerializer)
+from reviews.models import Category, Genre, Title, Review
+from .permissions import AdminAuthorModeratorOrReadOnly, IsAdmin
 
 
 User = get_user_model()
@@ -48,7 +44,7 @@ class UserViewSet(viewsets.ModelViewSet):
 
     @action(
         methods=['get', 'patch', 'delete'],
-        permission_classes=[permissions.IsAuthenticated],
+        permission_classes=(permissions.IsAuthenticated,),
         detail=False,
         url_path='me',
     )
@@ -128,7 +124,7 @@ class TitleViewSet(viewsets.ModelViewSet):
 class ReviewViewSet(viewsets.ModelViewSet):
     serializer_class = ReviewSerializer
     queryset = Review.objects.all()
-    permission_classes = [AdminAuthorModeratorOrReadOnly]
+    permission_classes = (AdminAuthorModeratorOrReadOnly,)
     pagination_class = pagination.PageNumberPagination
     filter_backends = (filters.SearchFilter,)
     search_fields = ('name',)

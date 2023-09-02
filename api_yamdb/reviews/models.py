@@ -5,6 +5,8 @@ from django.db import models
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.contrib.auth import get_user_model
 
+User = get_user_model()
+
 
 class MyUser(AbstractUser):
     ROLE_CHOICES = (
@@ -38,9 +40,6 @@ class MyUser(AbstractUser):
     @property
     def is_moderator(self):
         return self.role == 'moderator'
-
-      
-User = get_user_model()
 
 
 class Category(models.Model):
@@ -122,7 +121,7 @@ class TitleGenre(models.Model):
 
     def __str__(self) -> str:
         return f'Жанр произведения {self.name} - {self.genre}'
-    
+
 
 class Review(models.Model):
     author = models.ForeignKey(
@@ -135,7 +134,7 @@ class Review(models.Model):
         'Дата добавления', auto_now_add=True, db_index=True)
     title = models.ForeignKey(
         Title, on_delete=models.CASCADE, related_name='reviews')
-    
+
     class Meta:
         constraints = [
             models.UniqueConstraint(
