@@ -3,9 +3,7 @@ import random
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 from django.core.validators import MaxValueValidator, MinValueValidator
-from django.contrib.auth import get_user_model
 
-User = get_user_model()
 
 
 class MyUser(AbstractUser):
@@ -124,7 +122,7 @@ class TitleGenre(models.Model):
 
 class Review(models.Model):
     author = models.ForeignKey(
-        User, on_delete=models.CASCADE, related_name='reviews'
+        MyUser, on_delete=models.CASCADE, related_name='reviews'
     )
     text = models.CharField(max_length=255)
     score = models.IntegerField(
