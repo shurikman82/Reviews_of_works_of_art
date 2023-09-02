@@ -1,4 +1,8 @@
 from django.db import models
+from django.core.validators import MaxValueValidator, MinValueValidator
+from django.contrib.auth import get_user_model
+
+User = get_user_model()
 
 
 class Category(models.Model):
@@ -80,3 +84,27 @@ class TitleGenre(models.Model):
 
     def __str__(self) -> str:
         return f'Жанр произведения {self.name} - {self.genre}'
+    
+
+class Review(models.Model):
+    author = models.ForeignKey(
+        User, on_delete=models.CASCADE, related_name='reviews'
+    )
+    text = models.CharField(max_length=255)
+    score = models.IntegerField(
+        validators=[MinValueValidator(1), MaxValueValidator(10)])
+    pub_date = models.DateTimeField(
+        'Дата добавления', auto_now_add=True, db_index=True)
+    title = models.ForeignKey(
+        Title, on_delete=models.CASCADE, related_name='reviews')
+    
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=['author', 'title'],
+                name='unique_author_title'
+            )
+        ]
+
+    def __str__(self):
+        return self.text

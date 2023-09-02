@@ -2,7 +2,7 @@
 
 from django.db import migrations, models
 import django.db.models.deletion
-
+import django.core.validators
 
 class Migration(migrations.Migration):
 
@@ -37,12 +37,21 @@ class Migration(migrations.Migration):
             },
         ),
         migrations.CreateModel(
+            name='Review',
+            fields=[
+                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                ('text', models.CharField(max_length=255)),
+                ('score', models.IntegerField(validators=[django.core.validators.MinValueValidator(1), django.core.validators.MaxValueValidator(10)])),
+                ('pub_date', models.DateTimeField(auto_now_add=True, db_index=True, verbose_name='Дата добавления')),
+            ],
+        ),
+        migrations.CreateModel(
             name='Title',
             fields=[
                 ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('name', models.CharField(max_length=256, verbose_name='Название произведения')),
                 ('description', models.TextField(blank=True, verbose_name='Описание произведения')),
-                ('year', models.IntegerField(max_length=4, verbose_name='Год выпуска')),
+                ('year', models.IntegerField(verbose_name='Год выпуска')),
                 ('category', models.ForeignKey(null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='titles', to='reviews.category', verbose_name='Категория произведения')),
             ],
             options={
