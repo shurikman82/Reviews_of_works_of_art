@@ -1,8 +1,9 @@
 from rest_framework import serializers
 
-from reviews.models import Category, Genre, Title, TitleGenre, Review
+from reviews.models import Category, Genre, Title, Review
 from rest_framework.validators import UniqueTogetherValidator
 from django.db.models import Avg
+
 
 class CategorySerializer(serializers.ModelSerializer):
     class Meta:
@@ -18,44 +19,24 @@ class GenreSerializer(serializers.ModelSerializer):
 
 class TitleSerializer(serializers.ModelSerializer):
     rating = serializers.SerializerMethodField()
-    genre = GenreSerializer(many=True)
-    category = CategorySerializer()
-    rating = serializers.SerializerMethodField()
-    
+    genre = serializers.SlugRelatedField(
+        slug_field='name',
+        many=True,
+        queryset=Genre.objects.all()
+    )
+    category = serializers.SlugRelatedField(slug_field='name',
+                                            queryset=Category.objects.all())
+
     class Meta:
         model = Title
         fields = ('id', 'name', 'description',
                   'year', 'genre', 'rating', 'category')
-        
-    # def get_raiting(self, obj):
-    #     ratings = obj.score.all()
-    #     if not raitings:
-    #         return 0
-    #     total_rating = sum(ratings)
-    #     average_rating = total_rating / len(ratings)
-    #     return average_rating
 
     def get_rating(self, obj):
-        rating = Review.objects.filter(title=obj).aggregate(Avg('score'))['score__avg']
+        rating = Review.objects.filter(
+            title=obj).aggregate(Avg('score'))['score__avg']
         return rating
-    
-    def get_rating(self, obj):
-        return 0
 
-    def create(self, validated_data):
-        if 'genre' not in self.initial_data:
-            title = Title.objects.create(**validated_data)
-            return title
-
-        genres = validated_data.pop('genre')
-        title = Title.objects.create(**validated_data)
-        for genre in genres:
-            current_genre, status = Genre.objects.get_or_create(
-                **genre)
-            TitleGenre.objects.create(
-                genre=current_genre, title=title)
-        return title
-    
 
 class ReviewSerializer(serializers.ModelSerializer):
     author = serializers.SlugRelatedField(
@@ -73,7 +54,3 @@ class ReviewSerializer(serializers.ModelSerializer):
                 fields=('author', 'title')
             )
         ]
-
-
-
-
