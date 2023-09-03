@@ -26,8 +26,7 @@ class MyUser(AbstractUser):
     def check_confirmation_code(self, email_confirmation_code):
         if email_confirmation_code == self.confirmation_code:
             return True
-        return False\
-
+        return False
 
     @property
     def is_admin(self):
