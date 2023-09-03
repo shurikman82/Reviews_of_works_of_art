@@ -1,8 +1,11 @@
 from django.db.models import Avg
+from django.contrib.auth import get_user_model
 from rest_framework import serializers
 from rest_framework.validators import UniqueTogetherValidator
 
-from reviews.models import Category, Genre, Title, Review, User
+from reviews.models import Category, Genre, Title, Review
+
+User = get_user_model()
 
 
 class UserSerializer(serializers.ModelSerializer):
