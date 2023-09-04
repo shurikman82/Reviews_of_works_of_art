@@ -4,7 +4,7 @@ from django.contrib.auth import get_user_model
 from rest_framework import serializers
 from rest_framework.validators import UniqueTogetherValidator
 
-from reviews.models import Category, Genre, Title, Review, Comment, MyUser
+from reviews.models import Category, Genre, Title, Review, Comment
 
 User = get_user_model()
 
