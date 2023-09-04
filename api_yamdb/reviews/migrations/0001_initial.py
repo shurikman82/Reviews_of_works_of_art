@@ -118,3 +118,4 @@ class Migration(migrations.Migration):
             constraint=models.UniqueConstraint(fields=('author', 'title'), name='unique_author_title'),
         ),
     ]
+
