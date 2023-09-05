@@ -1,5 +1,3 @@
-import random
-
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 from django.core.validators import MaxValueValidator, MinValueValidator
@@ -19,15 +17,6 @@ class MyUser(AbstractUser):
     )
     confirmation_code = models.CharField(
         'confirmation_code', blank=True, max_length=128)
-
-    def make_confirmation_code(self):
-        self.confirmation_code = random.randint(10000, 100000)
-        return self.confirmation_code
-
-    def check_confirmation_code(self, email_confirmation_code):
-        if email_confirmation_code == self.confirmation_code:
-            return True
-        return False
 
     @property
     def is_admin(self):
