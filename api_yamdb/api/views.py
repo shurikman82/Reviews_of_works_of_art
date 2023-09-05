@@ -131,7 +131,7 @@ class TitleViewSet(viewsets.ModelViewSet):
         if self.request.method in permissions.SAFE_METHODS:
             return TitleReadOnlySerializer
         if self.request.method == 'PUT':
-            return TitleSerializer
+            return Response.status_code(status=status.HTTP_405_METHOD_NOT_ALLOWED)
         return super().get_serializer_class()
 
 
