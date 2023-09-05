@@ -123,7 +123,7 @@ class TitleViewSet(viewsets.ModelViewSet):
     permission_classes = (IsAdminOrReadOnly,)
     filter_backends = (filters.SearchFilter, DjangoFilterBackend)
     search_fields = ('genre',)
-   # filterset_fields = ('genre__slug',)
+    # filterset_fields = ('genre__slug',)
 
     def get_serializer_class(self):
         if self.request.method in permissions.SAFE_METHODS:
