@@ -5,7 +5,8 @@ from django.core.mail import send_mail
 from django.shortcuts import get_object_or_404
 
 from rest_framework import status
-from rest_framework import generics, viewsets, permissions, filters, pagination
+from rest_framework import (generics, mixins, viewsets,
+                            permissions, filters, pagination)
 from rest_framework_simplejwt.tokens import AccessToken
 from rest_framework.decorators import action, api_view, permission_classes
 from django_filters.rest_framework import DjangoFilterBackend
