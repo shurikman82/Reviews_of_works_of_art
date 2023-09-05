@@ -89,19 +89,31 @@ class GenreSerializer(serializers.ModelSerializer):
 
 
 class TitleSerializer(serializers.ModelSerializer):
-    rating = serializers.SerializerMethodField()
     genre = serializers.SlugRelatedField(
-        slug_field='name',
+        slug_field='slug',
         many=True,
         queryset=Genre.objects.all()
     )
-    category = serializers.SlugRelatedField(slug_field='name',
+    category = serializers.SlugRelatedField(slug_field='slug',
                                             queryset=Category.objects.all())
 
     class Meta:
         model = Title
         fields = ('id', 'name', 'description',
-                  'year', 'genre', 'rating', 'category')
+                  'year', 'genre', 'category')
+
+
+class TitleReadOnlySerializer(serializers.ModelSerializer):
+    rating = serializers.SerializerMethodField()
+    genre = GenreSerializer(many=True)
+    category = CategorySerializer()
+
+    class Meta:
+        model = Title
+        fields = ('id', 'name', 'genre', 'category',
+                  'rating', 'year', 'description')
+        read_only_fields = ('id', 'name', 'genre', 'category',
+                            'rating', 'year', 'description')
 
     def get_rating(self, obj):
         rating = Review.objects.filter(
@@ -117,7 +129,7 @@ class ReviewSerializer(serializers.ModelSerializer):
     class Meta:
         fields = ('id', 'title', 'text', 'author', 'score', 'pub_date')
         model = Review
-        read_only_fields = ('author')
+        read_only_fields = ('author',)
 
         validators = [
             UniqueTogetherValidator(

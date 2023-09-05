@@ -4,7 +4,7 @@ from django.core.mail import send_mail
 from django.shortcuts import get_object_or_404
 
 from rest_framework import status
-from rest_framework import generics, viewsets, permissions
+from rest_framework import generics, mixins, viewsets, permissions
 from rest_framework import filters, pagination, viewsets
 from rest_framework_simplejwt.tokens import AccessToken
 from rest_framework.decorators import action, api_view, permission_classes
@@ -14,11 +14,12 @@ from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
 
 from .serializers import (CategorySerializer, GenreSerializer,
-                          TitleSerializer, TokenSerializer,
-                          ReviewSerializer, UserSerializer,
+                          TitleSerializer, TitleReadOnlySerializer,
+                          TokenSerializer, ReviewSerializer, UserSerializer,
                           UserMeSerializer, UserRegistrationSerializer)
 from reviews.models import Category, Genre, Title, Review
-from .permissions import AdminAuthorModeratorOrReadOnly, IsAdmin
+from .permissions import (AdminAuthorModeratorOrReadOnly,
+                          IsAdmin, IsAdminOrReadOnly)
 
 
 User = get_user_model()
@@ -106,6 +107,7 @@ class GenreViewSet(viewsets.ModelViewSet):
     pagination_class = pagination.PageNumberPagination
     filter_backends = (filters.SearchFilter,)
     search_fields = ('name',)
+    permission_classes = (IsAdminOrReadOnly,)
 
 
 class CategoryViewSet(viewsets.ModelViewSet):
@@ -114,11 +116,23 @@ class CategoryViewSet(viewsets.ModelViewSet):
     pagination_class = pagination.PageNumberPagination
     filter_backends = (filters.SearchFilter,)
     search_fields = ('name',)
+    permission_classes = (IsAdminOrReadOnly,)
 
 
 class TitleViewSet(viewsets.ModelViewSet):
     queryset = Title.objects.all()
     serializer_class = TitleSerializer
+    permission_classes = (IsAdminOrReadOnly,)
+    filter_backends = (filters.SearchFilter, DjangoFilterBackend)
+    search_fields = ('genre',)
+   # filterset_fields = ('genre__slug',)
+
+    def get_serializer_class(self):
+        if self.request.method in permissions.SAFE_METHODS:
+            return TitleReadOnlySerializer
+        if self.request.method == 'PUT':
+            return TitleSerializer
+        return super().get_serializer_class()
 
 
 class ReviewViewSet(viewsets.ModelViewSet):
