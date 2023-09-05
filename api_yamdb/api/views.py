@@ -20,6 +20,7 @@ from .serializers import (CategorySerializer, GenreSerializer,
 from reviews.models import Category, Genre, Title, Review
 from .permissions import (AdminAuthorModeratorOrReadOnly,
                           IsAdmin, IsAdminOrReadOnly)
+from .filters import TitleFilter
 
 
 User = get_user_model()
@@ -125,13 +126,13 @@ class TitleViewSet(viewsets.ModelViewSet):
     permission_classes = (IsAdminOrReadOnly,)
     filter_backends = (filters.SearchFilter, DjangoFilterBackend)
     search_fields = ('genre',)
-   # filterset_fields = ('genre__slug',)
+    http_method_names = ('get', 'post', 'patch', 'delete')
+    filterset_class = TitleFilter
 
     def get_serializer_class(self):
         if self.request.method in permissions.SAFE_METHODS:
             return TitleReadOnlySerializer
-        if self.request.method == 'PUT':
-            return Response.status_code(status=status.HTTP_405_METHOD_NOT_ALLOWED)
+
         return super().get_serializer_class()
 
 
