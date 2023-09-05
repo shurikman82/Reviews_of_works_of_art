@@ -1,13 +1,13 @@
-from django.contrib.auth.tokens import default_token_generator
+import uuid
 from django.contrib.auth import get_user_model
 from django.core.mail import send_mail
-from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.pagination import PageNumberPagination
 from rest_framework import status
 from rest_framework import generics, viewsets, permissions
 from django.shortcuts import get_object_or_404
 from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.response import Response
+from rest_framework.filters import SearchFilter
 from rest_framework_simplejwt.tokens import AccessToken
 from .serializers import (TokenSerializer, UserSerializer,
                           UserMeSerializer, UserRegistrationSerializer)
@@ -24,30 +24,33 @@ class UserViewSet(viewsets.ModelViewSet):
     serializer_class = UserSerializer
     pagination_class = PageNumberPagination
     permission_classes = (IsAdmin, )
-    filter_backends = (DjangoFilterBackend, )
+    filter_backends = (SearchFilter, )
+    filterset_fields = ('username')
     search_fields = ('username', )
-
-    def get_serializer_class(self):
-        if self.action == 'me':
-            return UserMeSerializer
-        return self.serializer_class
-
-    def get_instance(self):
-        return self.request.user
+    lookup_field = 'username'
+    http_method_names = ['get', 'post', 'patch', 'delete',
+                         'head', 'options', 'trace']
 
     @action(
-        methods=['get', 'patch', 'delete'],
+        methods=['get', 'patch'],
         permission_classes=[permissions.IsAuthenticated],
+        serializer_class=UserMeSerializer,
         detail=False,
         url_path='me',
     )
     def me(self, request, *args, **kwargs):
-        self.get_object = self.get_instance
+        user = get_object_or_404(User, username=self.request.user)
         if request.method == 'GET':
-            return self.retrieve(request, *args, **kwargs)
+            serializer = self.get_serializer(user)
+            return Response(serializer.data, status=status.HTTP_200_OK)
         elif request.method == 'PATCH':
-            return self.partial_update(request, *args, **kwargs)
-        return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
+            serializer = self.get_serializer(
+                user, data=request.data, partial=True
+            )
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(status=status.HTTP_400_BAD_REQUEST)
 
 
 class CreateUser(generics.CreateAPIView):
@@ -58,11 +61,10 @@ class CreateUser(generics.CreateAPIView):
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        user = User.objects.create(
-            username=request.data['username'],
-            email=request.data['email'],
-        )
-        confirmation_code = user.make_confirmation_code()
+        user, _ = User.objects.get_or_create(**serializer.validated_data)
+        confirmation_code = str(uuid.uuid4())
+        user.confirmation_code = confirmation_code
+        user.save()
         send_mail(
             subject="YaMDb registration",
             message=f"Your confirmation code: {confirmation_code}",
@@ -77,15 +79,13 @@ class CreateUser(generics.CreateAPIView):
 def get_jwt_token(request):
     serializer = TokenSerializer(data=request.data)
     serializer.is_valid(raise_exception=True)
+    code = serializer.validated_data['confirmation_code']
     user = get_object_or_404(
         User,
         username=serializer.validated_data["username"]
     )
 
-    if default_token_generator.check_token(
-        user, serializer.validated_data["confirmation_code"]
-    ):
-        token = AccessToken.for_user(user)
-        return Response({"token": str(token)}, status=status.HTTP_200_OK)
-
+    if code == user.confirmation_code:
+        token = str(AccessToken.for_user(user))
+        return Response({'token': token}, status=status.HTTP_201_CREATED)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
