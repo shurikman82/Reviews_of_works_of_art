@@ -130,3 +130,14 @@ class Review(models.Model):
 
     def __str__(self):
         return self.text
+
+
+class Comment(models.Model):
+    author = models.ForeignKey(
+        MyUser, on_delete=models.CASCADE, related_name='comments'
+    )
+    text = models.CharField(max_length=255)
+    pub_date = models.DateTimeField(
+        'Дата добавления', auto_now_add=True, db_index=True)
+    review = models.ForeignKey(
+        Review, on_delete=models.CASCADE, related_name='comments')

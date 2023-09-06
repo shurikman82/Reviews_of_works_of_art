@@ -1,10 +1,9 @@
 from django.db.models import Avg
 from django.contrib.auth import get_user_model
 from rest_framework import serializers
-from rest_framework.validators import UniqueTogetherValidator
 from django.core.validators import RegexValidator
 
-from reviews.models import Category, Genre, Title, Review
+from reviews.models import Category, Genre, Title, Review, Comment
 
 User = get_user_model()
 
@@ -158,13 +157,27 @@ class ReviewSerializer(serializers.ModelSerializer):
     )
 
     class Meta:
-        fields = ('id', 'title', 'text', 'author', 'score', 'pub_date')
+        fields = ('id', 'text', 'author', 'score', 'pub_date')
         model = Review
-        read_only_fields = ('author',)
 
-        validators = [
-            UniqueTogetherValidator(
-                queryset=Review.objects.all(),
-                fields=('author', 'title')
+    def validate(self, data):
+        review = Review.objects.filter(
+            author=self.context['request'].user,
+            title=self.context['view'].kwargs.get('title_id')
+        )
+        if review and self.context['request'].method == 'POST':
+            raise serializers.ValidationError(
+                'Вы можете оставить только 1 отзыв к произведению!'
             )
-        ]
+        return data
+
+
+class CommentSerializer(serializers.ModelSerializer):
+    author = serializers.SlugRelatedField(
+        read_only=True, slug_field='username'
+    )
+
+    class Meta:
+        fields = ('id', 'text', 'author', 'review', 'pub_date')
+        model = Comment
+        read_only_fields = ('author', 'review')
