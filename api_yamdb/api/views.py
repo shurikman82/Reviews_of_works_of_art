@@ -78,8 +78,9 @@ class CreateUser(generics.CreateAPIView):
         send_mail(
             subject="YaMDb registration",
             message=f"Your confirmation code: {confirmation_code}",
-            from_email=None,
+            from_email='yambd@yandex.ru',
             recipient_list=[user.email],
+            fail_silently=True
         )
         return Response(request.data, status=status.HTTP_200_OK)
 
