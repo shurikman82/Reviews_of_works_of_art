@@ -4,18 +4,23 @@ from rest_framework import serializers
 from django.core.validators import RegexValidator
 
 from reviews.models import Category, Genre, Title, Review, Comment
-from rest_framework import serializers
+
 User = get_user_model()
 
 
 class UserSerializer(serializers.ModelSerializer):
+    ROLE_CHOICES = (
+        ('user', 'Пользователь'),
+        ('moderator', 'Модератор'),
+        ('admin', 'Администратор'),
+    )
     email = serializers.EmailField(max_length=254, required=True)
     username = serializers.CharField(
         max_length=150, required=True, validators=(
             RegexValidator(r'^[\w.@+-]+\Z'),
         )
     )
-    role = serializers.CharField(max_length=254, required=False)
+    role = serializers.ChoiceField(choices=ROLE_CHOICES, required=False)
 
     def validate_username(self, value):
         if value.lower() == 'me':
