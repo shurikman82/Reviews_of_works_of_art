@@ -5,7 +5,8 @@ from django.core.mail import send_mail
 from django.shortcuts import get_object_or_404
 
 from rest_framework import status
-from rest_framework import generics, viewsets, permissions, filters, pagination
+from rest_framework import (generics, mixins, viewsets,
+                            permissions, filters, pagination)
 from rest_framework_simplejwt.tokens import AccessToken
 from rest_framework.decorators import action, api_view, permission_classes
 from django_filters.rest_framework import DjangoFilterBackend
@@ -20,6 +21,7 @@ from .serializers import (CategorySerializer, GenreSerializer,
 from reviews.models import Category, Genre, Title, Review
 from .permissions import (AdminAuthorModeratorOrReadOnly,
                           IsAdmin, IsAdminOrReadOnly)
+from .filters import TitleFilter
 
 
 User = get_user_model()
@@ -76,8 +78,9 @@ class CreateUser(generics.CreateAPIView):
         send_mail(
             subject="YaMDb registration",
             message=f"Your confirmation code: {confirmation_code}",
-            from_email=None,
+            from_email='yambd@yandex.ru',
             recipient_list=[user.email],
+            fail_silently=True
         )
         return Response(request.data, status=status.HTTP_200_OK)
 
@@ -99,22 +102,34 @@ def get_jwt_token(request):
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-class GenreViewSet(viewsets.ModelViewSet):
+class GenreViewSet(
+    mixins.CreateModelMixin,
+    mixins.DestroyModelMixin,
+    mixins.ListModelMixin,
+    viewsets.GenericViewSet,
+):
     queryset = Genre.objects.all()
     serializer_class = GenreSerializer
     pagination_class = pagination.PageNumberPagination
     filter_backends = (filters.SearchFilter,)
     search_fields = ('name',)
     permission_classes = (IsAdminOrReadOnly,)
+    lookup_field = 'slug'
 
 
-class CategoryViewSet(viewsets.ModelViewSet):
+class CategoryViewSet(
+    mixins.CreateModelMixin,
+    mixins.DestroyModelMixin,
+    mixins.ListModelMixin,
+    viewsets.GenericViewSet,
+):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
     pagination_class = pagination.PageNumberPagination
     filter_backends = (filters.SearchFilter,)
     search_fields = ('name',)
     permission_classes = (IsAdminOrReadOnly,)
+    lookup_field = 'slug'
 
 
 class TitleViewSet(viewsets.ModelViewSet):
@@ -123,13 +138,13 @@ class TitleViewSet(viewsets.ModelViewSet):
     permission_classes = (IsAdminOrReadOnly,)
     filter_backends = (filters.SearchFilter, DjangoFilterBackend)
     search_fields = ('genre',)
-   # filterset_fields = ('genre__slug',)
+    http_method_names = ('get', 'post', 'patch', 'delete')
+    filterset_class = TitleFilter
 
     def get_serializer_class(self):
         if self.request.method in permissions.SAFE_METHODS:
             return TitleReadOnlySerializer
-        if self.request.method == 'PUT':
-            return TitleSerializer
+
         return super().get_serializer_class()
 
 
