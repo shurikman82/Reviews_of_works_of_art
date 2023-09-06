@@ -9,14 +9,15 @@ class MyUser(AbstractUser):
         ('moderator', 'Модератор'),
         ('admin', 'Администратор'),
     )
-    bio = models.TextField()
+    bio = models.TextField(verbose_name='Биография', blank=True)
     role = models.CharField(
         choices=ROLE_CHOICES,
+        verbose_name='Роль пользователя',
         max_length=9, default='user',
         error_messages={'validators': 'Выбрана несуществующая роль'}
     )
     confirmation_code = models.CharField(
-        'confirmation_code', blank=True, max_length=128)
+        'Код подтверждения', blank=True, max_length=128)
 
     @property
     def is_admin(self):
@@ -25,6 +26,10 @@ class MyUser(AbstractUser):
     @property
     def is_moderator(self):
         return self.role == 'moderator'
+
+    class Meta:
+        verbose_name = 'Пользователь'
+        verbose_name_plural = 'Пользователи'
 
 
 class Category(models.Model):
@@ -110,17 +115,25 @@ class TitleGenre(models.Model):
 
 class Review(models.Model):
     author = models.ForeignKey(
-        MyUser, on_delete=models.CASCADE, related_name='reviews'
+        MyUser, on_delete=models.CASCADE,
+        related_name='reviews',
+        verbose_name='Автор отзыва',
     )
-    text = models.CharField(max_length=255)
+    text = models.CharField(verbose_name='Текст отзыва', max_length=255)
     score = models.IntegerField(
-        validators=[MinValueValidator(1), MaxValueValidator(10)])
+        validators=[MinValueValidator(1), MaxValueValidator(10)],
+        verbose_name='Оценка произведения в баллах от 1 до 10.'
+    )
     pub_date = models.DateTimeField(
         'Дата добавления', auto_now_add=True, db_index=True)
     title = models.ForeignKey(
-        Title, on_delete=models.CASCADE, related_name='reviews')
+        Title, on_delete=models.CASCADE, related_name='reviews',
+        verbose_name='Произведение, к которому относится отзыв.'
+    )
 
     class Meta:
+        verbose_name = 'Отзыв'
+        verbose_name_plural = 'Отзывы'
         constraints = [
             models.UniqueConstraint(
                 fields=['author', 'title'],
@@ -134,10 +147,17 @@ class Review(models.Model):
 
 class Comment(models.Model):
     author = models.ForeignKey(
-        MyUser, on_delete=models.CASCADE, related_name='comments'
+        MyUser, on_delete=models.CASCADE,
+        related_name='comments', verbose_name='Автор комментария'
     )
-    text = models.CharField(max_length=255)
+    text = models.CharField(verbose_name='Текст комментария', max_length=255)
     pub_date = models.DateTimeField(
         'Дата добавления', auto_now_add=True, db_index=True)
     review = models.ForeignKey(
-        Review, on_delete=models.CASCADE, related_name='comments')
+        Review, on_delete=models.CASCADE, related_name='comments',
+        verbose_name='Отзыв, к которому относится комментарий.',
+    )
+
+    class Meta:
+        verbose_name = 'Комментарий'
+        verbose_name_plural = 'Комментарии'

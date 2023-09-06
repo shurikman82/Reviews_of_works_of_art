@@ -3,41 +3,39 @@ import uuid
 from django.contrib.auth import get_user_model
 from django.core.mail import send_mail
 from django.shortcuts import get_object_or_404
-from rest_framework.exceptions import MethodNotAllowed
-from rest_framework import status
-from rest_framework import (generics, mixins, viewsets,
-                            permissions, filters, pagination)
-from rest_framework_simplejwt.tokens import AccessToken
-from rest_framework.decorators import action, api_view, permission_classes
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework.response import Response
-from rest_framework.pagination import (PageNumberPagination,
-                                       LimitOffsetPagination)
+from rest_framework import (filters, generics, mixins, pagination, permissions,
+                            status, viewsets)
+from rest_framework.decorators import action, api_view, permission_classes
+from rest_framework.exceptions import MethodNotAllowed
 from rest_framework.filters import SearchFilter
+from rest_framework.pagination import (LimitOffsetPagination,
+                                       PageNumberPagination)
 from rest_framework.permissions import IsAuthenticatedOrReadOnly
-from .serializers import (CategorySerializer, GenreSerializer,
-                          TitleSerializer, TitleReadOnlySerializer,
-                          TokenSerializer, ReviewSerializer, UserSerializer,
-                          UserMeSerializer, UserRegistrationSerializer,
-                          CommentSerializer)
-from reviews.models import Category, Genre, Title, Review, Comment
-from .permissions import (AdminAuthorModeratorOrReadOnly,
-                          IsAdmin, IsAdminOrReadOnly)
-from .filters import TitleFilter
+from rest_framework.response import Response
+from rest_framework_simplejwt.tokens import AccessToken
+from reviews.models import Category, Comment, Genre, Review, Title
 
+from .filters import TitleFilter
+from .permissions import (AdminAuthorModeratorOrReadOnly, IsAdmin,
+                          IsAdminOrReadOnly)
+from .serializers import (CategorySerializer, CommentSerializer,
+                          GenreSerializer, ReviewSerializer,
+                          TitleReadOnlySerializer, TitleSerializer,
+                          TokenSerializer, UserMeSerializer,
+                          UserRegistrationSerializer, UserSerializer)
 
 User = get_user_model()
 
 
 class UserViewSet(viewsets.ModelViewSet):
 
-    lookup_field = 'username'
     queryset = User.objects.all()
     serializer_class = UserSerializer
     pagination_class = PageNumberPagination
     permission_classes = (IsAdmin, )
     filter_backends = (SearchFilter, )
-    filterset_fields = ('username')
+    filterset_fields = ('username',)
     search_fields = ('username', )
     lookup_field = 'username'
     http_method_names = ['get', 'post', 'patch', 'delete',
@@ -183,4 +181,3 @@ class CommentViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         review = get_object_or_404(Review, pk=self.kwargs.get('review_id'))
         serializer.save(author=self.request.user, review=review)
-

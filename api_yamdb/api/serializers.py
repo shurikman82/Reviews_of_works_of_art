@@ -1,9 +1,9 @@
-from django.db.models import Avg
 from django.contrib.auth import get_user_model
-from rest_framework import serializers
 from django.core.validators import RegexValidator
+from django.db.models import Avg
+from rest_framework import serializers
 
-from reviews.models import Category, Genre, Title, Review, Comment
+from reviews.models import Category, Comment, Genre, Review, Title
 
 User = get_user_model()
 
@@ -27,6 +27,20 @@ class UserSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError('Invalid value of username')
         return value
 
+    def validate(self, data):
+        if User.objects.filter(email=data.get('email'),
+                               username=data.get('username')):
+            return data
+        elif User.objects.filter(email=data.get('email')):
+            raise serializers.ValidationError(
+                'Такой email уже используется!'
+            )
+        elif User.objects.filter(username=data.get('username')):
+            raise serializers.ValidationError(
+                'Такое имя пользователя уже используется!'
+            )
+        return data
+
     class Meta:
         model = User
         fields = (
@@ -35,7 +49,7 @@ class UserSerializer(serializers.ModelSerializer):
             'role',
             'bio',
             'first_name',
-            'last_name'
+            'last_name',
         )
         lookup_field = 'username'
         extra_kwargs = {
@@ -65,15 +79,11 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
             return data
         elif User.objects.filter(email=data.get('email')):
             raise serializers.ValidationError(
-                {
-                    "error": "Email is already used!"
-                }
+                'Такой email уже используется!'
             )
         elif User.objects.filter(username=data.get('username')):
             raise serializers.ValidationError(
-                {
-                    "error": "Username is already used!"
-                }
+                'Такое имя пользователя уже используется!'
             )
         return data
 
