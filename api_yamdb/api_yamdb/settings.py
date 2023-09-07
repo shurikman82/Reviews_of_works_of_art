@@ -10,7 +10,7 @@ DEBUG = True
 
 ALLOWED_HOSTS = ['*']
 
-AUTH_USER_MODEL = 'reviews.MyUser'
+AUTH_USER_MODEL = 'reviews.CustomUser'
 
 
 INSTALLED_APPS = [
@@ -118,3 +118,4 @@ SIMPLE_JWT = {
 
 EMAIL_BACKEND = 'django.core.mail.backends.filebased.EmailBackend'
 EMAIL_FILE_PATH = BASE_DIR / 'sent_emails'
+ADMIN_EMAIL = 'yambd@yandex.ru'
