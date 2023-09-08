@@ -5,7 +5,7 @@ from django.core.mail import send_mail
 from django.db.models import Avg
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import (filters, generics, mixins, pagination, permissions,
+from rest_framework import (filters, generics, permissions,
                             status, viewsets)
 from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.filters import SearchFilter
@@ -14,10 +14,11 @@ from rest_framework.pagination import (LimitOffsetPagination,
 from rest_framework.permissions import IsAuthenticatedOrReadOnly
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import AccessToken
-from reviews.models import Category, Comment, Genre, Review, Title
 
+from reviews.models import Category, Comment, Genre, Review, Title
 from api_yamdb.settings import ADMIN_EMAIL
 from .filters import TitleFilter
+from .mixins import CustomMixinViewSet
 from .permissions import (AdminAuthorModeratorOrReadOnly, IsAdmin,
                           IsAdminOrReadOnly)
 from .serializers import (CategorySerializer, CommentSerializer,
@@ -103,19 +104,6 @@ def get_jwt_token(request):
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-class CustomMixinViewSet(
-    mixins.CreateModelMixin,
-    mixins.DestroyModelMixin,
-    mixins.ListModelMixin,
-    viewsets.GenericViewSet,
-):
-    pagination_class = pagination.PageNumberPagination
-    filter_backends = (filters.SearchFilter,)
-    search_fields = ('name',)
-    permission_classes = (IsAdminOrReadOnly,)
-    lookup_field = 'slug'
-
-
 class GenreViewSet(CustomMixinViewSet):
     queryset = Genre.objects.all()
     serializer_class = GenreSerializer
@@ -127,6 +115,9 @@ class CategoryViewSet(CustomMixinViewSet):
 
 
 class TitleViewSet(viewsets.ModelViewSet):
+    queryset = Title.objects.annotate(
+        rating=Avg('reviews__score')
+    ).order_by('name')
     serializer_class = TitleSerializer
     permission_classes = (IsAdminOrReadOnly,)
     filter_backends = (filters.SearchFilter, DjangoFilterBackend)
@@ -139,12 +130,6 @@ class TitleViewSet(viewsets.ModelViewSet):
             return TitleReadOnlySerializer
 
         return super().get_serializer_class()
-
-    def get_queryset(self):
-        queryset = Title.objects.annotate(
-            rating=Avg('reviews__score')
-        ).order_by('name')
-        return queryset
 
 
 class ReviewViewSet(viewsets.ModelViewSet):

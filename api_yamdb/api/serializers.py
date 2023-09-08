@@ -29,16 +29,8 @@ class CustomValidateSerializer(serializers.ModelSerializer):
             )
         return data
 
-    class Meta:
-        Abstract = True
-
 
 class UserSerializer(CustomValidateSerializer):
-    ROLE_CHOICES = (
-        ('user', 'Пользователь'),
-        ('moderator', 'Модератор'),
-        ('admin', 'Администратор'),
-    )
     email = serializers.EmailField(max_length=254, required=True)
     username = serializers.CharField(
         max_length=150, required=True, validators=(
