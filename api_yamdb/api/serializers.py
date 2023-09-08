@@ -9,7 +9,7 @@ User = get_user_model()
 
 class CustomValidateSerializer(serializers.ModelSerializer):
     def validate_username(self, value):
-        if value == r'me':
+        if value in ('me', 'ME', 'Me', 'mE'):
             raise serializers.ValidationError(
                 'Имя пользователя "me" не разрешено!'
             )
