@@ -2,21 +2,16 @@ from django.contrib.auth.models import AbstractUser
 from django.db import models
 from django.core.validators import MaxValueValidator, MinValueValidator
 
-from .constants import ADMIN, MODERATOR, USER
+from .constants import UserRoleChoices
 from .validators import title_year_validator
 
 
 class CustomUser(AbstractUser):
-    ROLE_CHOICES = (
-        ('user', USER),
-        ('moderator', MODERATOR),
-        ('admin', ADMIN),
-    )
     bio = models.TextField(verbose_name='Биография', blank=True)
     role = models.CharField(
-        choices=ROLE_CHOICES,
+        choices=UserRoleChoices.choices,
         verbose_name='Роль пользователя',
-        max_length=9, default=USER,
+        max_length=9, default=UserRoleChoices.USER,
         error_messages={'validators': 'Выбрана несуществующая роль'}
     )
     confirmation_code = models.CharField(
@@ -24,11 +19,11 @@ class CustomUser(AbstractUser):
 
     @property
     def is_admin(self):
-        return self.role == 'admin'
+        return self.role == UserRoleChoices.ADMIN
 
     @property
     def is_moderator(self):
-        return self.role == 'moderator'
+        return self.role == UserRoleChoices.MODERATOR
 
     class Meta:
         verbose_name = 'Пользователь'
