@@ -13,7 +13,7 @@ git clone https://github.com/shurikman82/Reviews_of_work_of_art.git
 python3 -m venv venv
 ```
 ```bash
-python3 source venv/bin/activate
+source venv/bin/activate
 ```
 Установите зависимости в окружение и сделайте миграции:
 ```bash
