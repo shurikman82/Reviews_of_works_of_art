@@ -19,6 +19,10 @@ source venv/bin/activate
 ```bash
 pip install -r requirements.txt
 ```
+Не забудьте создать файл `.env` на примере `.env.example`:
+```bash
+touch .env
+```
 ```bash
 cd api_yamdb
 ```
